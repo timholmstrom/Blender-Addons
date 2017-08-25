@@ -11,7 +11,8 @@ class MultiOperator(Operator):
 		# Make the last added object in the scene active (in this case the imported object)
 		context.scene.objects.active = bpy.data.objects[len(bpy.data.objects) - 1:][0]
 		imported_object = context.object
-
+		imported_object.select = True
+		
 		ops.object.scale_transform()
 		ops.object.add_parent_cube()
 
