@@ -19,10 +19,10 @@
 bl_info = {
 	"name" : "MSwap",
 	"author" : "Tim Holmström",
-	"version" : (0, 0, 1),
+	"version" : (0, 1, 1),
 	"blender" : (2, 78, 0),
 	"location" : "View3D > Tools Panel",
-	"description" : "Swaps current material for matching fake-user material.",
+	"description" : "Swaps current material for matching material(using Viewport Color).",
 	"warning" : "",
 	"wiki_url" : "",
 	"tracker_url" : "",
@@ -40,18 +40,47 @@ else:
 	from . import mswap
 
 import bpy
-from bpy.types import Scene
-from bpy.props import FloatProperty
+from bpy.types import Scene, Operator, AddonPreferences
+from bpy.props import FloatProperty, StringProperty
+
+class MswapAddonPreferences(AddonPreferences):
+	bl_idname = __name__
+
+	filepath = StringProperty(
+				name="Path",
+				subtype="FILE_PATH",
+				)
+
+	def draw(self, context):
+		layout = self.layout
+		layout.label(text="Specifies a .blend file for swapping materials.")
+		layout.prop(self, "filepath")
+
+class OBJECT_OT_addon_prefs_mswap(Operator):
+	bl_idname = "object.addon_prefs_mswap"
+	bl_label = "MSwap preferences"
+	bl_options = {'REGISTER', 'UNDO'}
+
+	def execute(self, context):
+		user_preferences = context.user_preferences
+		addon_prefs = user_preferences.addons[__name__].preferences
+
+		# if addon_prefs.filepath is not None:
+		# 	with bpy.data.libraries.load(addon_prefs.filepath) as (data_from, data_to):
+		# 		data_to.materials = data_from.materials
+		# 		# swap_materials = data_from.materials
+		# else:
+		# 	pass
+
+		return {'FINISHED'}
 
 def register():
 	bpy.utils.register_module(__name__)
 	Scene.mswap_threshold = FloatProperty(name = "Color Threshold", description = "How much a material's color can differ from fake-user materials", default = 0.08)
 
-
 def unregister():
 	bpy.utils.unregister_module(__name__)
 	del Scene.mswap_threshold
-
 
 if __name__ == "__main__":
 	register()
