@@ -15,5 +15,6 @@ class MaterialConvertPanel(Panel):
         row = layout.row()
         row.operator("object.mtl_to_cycles")
 
+
         row = layout.row()
         row.prop(context.scene, "MtlPath")

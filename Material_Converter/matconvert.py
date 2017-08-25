@@ -1,4 +1,5 @@
 import bpy
+from math import sqrt
 from bpy import ops
 from bpy.types import Operator
 
@@ -34,6 +35,7 @@ class MtlToCycles(Operator):
 
 		return {'RUNNING_MODAL'}
 
+
 def readMtl(filepath):
 	materials = {}
 	with open(filepath) as f:
@@ -54,9 +56,16 @@ def readMtl(filepath):
 	return materials
 
 def convertMaterial(material, ns, illum):
-	diffuse_color = material.diffuse_color
+	diffuse_colorR = s2lin(material.diffuse_color[0])
+	diffuse_colorG = s2lin(material.diffuse_color[1])
+	diffuse_colorB = s2lin(material.diffuse_color[2])
+	# diffuse_colorR = material.diffuse_color[0]
+	# diffuse_colorG = material.diffuse_color[1]
+	# diffuse_colorB = material.diffuse_color[2]
+
 	specular_color = material.specular_color
-	roughness = nsToRoughness(ns)
+
+	roughness = ironNsToRoughness(ns)
 	if roughness is None:
 		roughness = 2.0
 
@@ -72,60 +81,30 @@ def convertMaterial(material, ns, illum):
 
 	if illum == 3:
 		node_group.node_tree = bpy.data.node_groups['Metal']
-		node_group.inputs[0].default_value = (diffuse_color[0], diffuse_color[1], diffuse_color[2], 1)
+		node_group.inputs[0].default_value = (diffuse_colorR, diffuse_colorG, diffuse_colorB, 1)
 		node_group.inputs[1].default_value = (specular_color[0], specular_color[1], specular_color[2], 1)
 		node_group.inputs[2].default_value = roughness
 	else:
 		node_group.node_tree = bpy.data.node_groups['Glossy']
-		node_group.inputs[0].default_value = (diffuse_color[0], diffuse_color[1], diffuse_color[2], 1)
+		node_group.inputs[0].default_value = (diffuse_colorR, diffuse_colorG, diffuse_colorB, 1)
 		node_group.inputs[1].default_value = roughness
 
 	links = material.node_tree.links
 	link = links.new(node_group.outputs[0], node_output.inputs[0])
 
-def nsToRoughness(ns):
-	if ns < 9:
-		return 1.0
-	elif ns < 21:
-		return 0.95
-	elif ns < 41:
-		return 0.9
-	elif ns < 69:
-		return 0.85
-	elif ns < 105:
-		return 0.8
-	elif ns < 149:
-		return 0.75
-	elif ns < 201:
-		return 0.7
-	elif ns < 261:
-		return 0.65
-	elif ns < 329:
-		return 0.6
-	elif ns < 405:
-		return 0.55
-	elif ns < 489:
-		return 0.5
-	elif ns < 581:
-		return 0.45
-	elif ns < 681:
-		return 0.4
-	elif ns < 789:
-		return 0.35
-	elif ns < 905:
-		return 0.3
-	elif ns < 1029:
-		return 0.25
-	elif ns < 1161:
-		return 0.2
-	elif ns < 1301:
-		return 0.15
-	elif ns < 1449:
-		return 0.1
-	elif ns < 1605:
-		return 0.05
-	elif ns >= 1605:
-		return 0.0
+def s2lin(x):
+	a = 0.055
+	if x <=0.04045 :
+		y = x * (1.0 / 12.92)
 	else:
-		print("Error. The 'Ns' value: %s can't be converted to roughness." % ns)
-		return None
+		y = pow( (x + a) * (1.0 / (1 + a)), 2.4)
+	return y
+
+def ironNsToRoughness(value):
+    if value < 5.0:
+        ns = 1.0
+    elif value > 1605.0:
+        ns = 0.0
+    else:
+        ns = 1.0 - (sqrt(value - 5) * 0.025)
+    return ns

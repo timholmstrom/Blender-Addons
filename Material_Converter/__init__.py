@@ -19,7 +19,7 @@
 bl_info = {
 	"name" : "Material Converter",
 	"author" : "Tim Holmström",
-	"version" : (0, 0, 1),
+	"version" : (0, 1, 1),
 	"blender" : (2, 78, 0),
 	"location" : "View3D > Tools Panel",
 	"description" : "Convert materials to Cycles",
@@ -28,6 +28,7 @@ bl_info = {
 	"tracker_url" : "",
 	"category" : "User",
 }
+
 
 if "bpy" in locals():
 	import imp
